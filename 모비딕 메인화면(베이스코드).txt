@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>모비딕 프로그램 2.0</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg-primary: #0d0f14;
+    --bg-secondary: #141720;
+    --bg-panel: #1a1d26;
+    --bg-card: #1e2130;
+    --accent-blue: #2a82e4;
+    --accent-cyan: #00c8ff;
+    --accent-green: #26a69a;
+    --accent-red: #ef5350;
+    --accent-yellow: #f5a623;
+    --accent-orange: #ff6b35;
+    --text-primary: #e8eaf0;
+    --text-secondary: #8b92a8;
+    --text-muted: #4a5068;
+    --border: #2a2d3e;
+    --positive: #26c281;
+    --negative: #e84545;
+    --highlight: #f0b429;
+  }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    font-size: 13px;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-secondary);
+    padding: 8px 20px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    height: 48px;
+  }
+  .header-left { display: flex; align-items: center; gap: 10px; }
+  .logo-icon { font-size: 26px; }
+  .logo-title {
+    font-size: 20px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    color: var(--text-primary);
+  }
+  .logo-title span { color: var(--accent-cyan); }
+  .header-timer {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent-cyan);
+    letter-spacing: 2px;
+  }
+  .header-timer .timer-count {
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin-left: 6px;
+  }
+
+  /* ── MAIN LAYOUT ── */
+  .main {
+    display: grid;
+    grid-template-columns: 165px 1fr 220px;
+    gap: 0;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ── PANEL BASE ── */
+  .panel {
+    background: var(--bg-panel);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .panel-title {
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    text-align: center;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── LEFT: TOP 20 ── */
+  .left-panel { }
+  .rank-list { overflow-y: auto; flex: 1; }
+  .rank-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 12px;
+    border-bottom: 1px solid #1c1f2a;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .rank-item:hover { background: var(--bg-card); }
+  .rank-item.active { background: #1f2540; border-left: 2px solid var(--accent-cyan); }
+  .rank-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+  .rank-pct {
+    font-size: 12px;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .rank-pct.up { color: var(--positive); }
+  .rank-pct.down { color: var(--negative); }
+
+  /* ── CENTER ── */
+  .center-panel {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-right: 1px solid var(--border);
+  }
+
+  /* Trade Controls */
+  .trade-controls {
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 12px;
+    flex-shrink: 0;
+  }
+  .control-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+  .control-row:last-child { margin-bottom: 0; }
+
+  .btn {
+    padding: 5px 10px;
+    border: none;
+    border-radius: 3px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .btn:hover { filter: brightness(1.15); }
+  .btn:active { transform: scale(0.97); }
+
+  .btn-pct {
+    background: #2a2d3e;
+    color: var(--text-primary);
+    min-width: 38px;
+  }
+  .btn-unit {
+    background: #2a2d3e;
+    color: var(--text-secondary);
+    font-weight: 400;
+  }
+  .btn-input {
+    flex: 1;
+    padding: 5px 8px;
+    background: #12141c;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--text-primary);
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    text-align: right;
+  }
+  .btn-buy-limit {
+    background: #1e3a5f;
+    color: #5ba8e8;
+    border: 1px solid #2a5fa0;
+  }
+  .btn-sell-market {
+    background: #3d1f1f;
+    color: var(--accent-red);
+    border: 1px solid #6b2c2c;
+  }
+  .btn-sell-market2 {
+    background: #4a1a1a;
+    color: #ff8080;
+    border: 1px solid #7a2a2a;
+  }
+
+  .btn-stoploss {
+    background: var(--accent-red);
+    color: white;
+    min-width: 55px;
+    font-size: 13px;
+  }
+  .btn-sl-opt {
+    background: #2a1818;
+    color: var(--negative);
+    border: 1px solid #5a2020;
+    min-width: 62px;
+  }
+  .btn-execute {
+    background: var(--accent-blue);
+    color: white;
+    flex: 1;
+  }
+
+  /* ── ICON BAR ── */
+  .icon-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 30px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    padding: 7px 12px;
+    flex-shrink: 0;
+  }
+  .icon-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    cursor: pointer;
+    padding: 5px 14px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: #12141c;
+    transition: all 0.2s;
+    user-select: none;
+  }
+  .icon-btn:hover { border-color: #4a5068; background: #1a1d26; }
+  .icon-btn .icon-svg { font-size: 22px; filter: grayscale(1) brightness(0.5); transition: all 0.2s; }
+  .icon-btn .icon-label { font-size: 10px; color: var(--text-muted); transition: color 0.2s; letter-spacing: 0.3px; }
+  .icon-btn.active { border-color: #26c281; background: #0d2318; box-shadow: 0 0 8px rgba(38,194,129,0.3); }
+  .icon-btn.active .icon-svg { filter: none; }
+  .icon-btn.active .icon-label { color: #26c281; }
+  .icon-btn.active-blue { border-color: #00c8ff; background: #051a24; box-shadow: 0 0 8px rgba(0,200,255,0.3); }
+  .icon-btn.active-blue .icon-svg { filter: none; }
+  .icon-btn.active-blue .icon-label { color: #00c8ff; }
+  .icon-btn.active-yellow { border-color: #f0b429; background: #1f1500; box-shadow: 0 0 8px rgba(240,180,41,0.3); }
+  .icon-btn.active-yellow .icon-svg { filter: none; }
+  .icon-btn.active-yellow .icon-label { color: #f0b429; }
+
+  /* ── btn +/0% ── */
+  .btn-sl-pos {
+    background: #182a18;
+    color: #26c281;
+    border: 1px solid #265026;
+    min-width: 52px;
+  }
+  .btn-sl-zero {
+    background: #1a1a1a;
+    color: #8b92a8;
+    border: 1px solid #3a3d50;
+    min-width: 40px;
+  }
+
+  /* ── 장칠병 ── */
+  .jangchil-area {
+    height: 140px;
+    flex-shrink: 0;
+    background: #0a0c10;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    gap: 14px;
+    position: relative;
+    overflow: hidden;
+  }
+  .jangchil-area::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 18px,
+      rgba(255,255,255,0.015) 18px, rgba(255,255,255,0.015) 19px
+    );
+    pointer-events: none;
+  }
+  .jangchil-char {
+    font-size: 62px;
+    flex-shrink: 0;
+    filter: drop-shadow(0 0 6px rgba(255,200,100,0.3));
+    line-height: 1;
+  }
+  .jangchil-bubble {
+    flex: 1;
+    background: #0e1a0e;
+    border: 1px solid #2a4a2a;
+    border-radius: 8px;
+    padding: 10px 14px;
+    position: relative;
+    font-size: 12px;
+    line-height: 1.7;
+  }
+  .jangchil-bubble::before {
+    content: '';
+    position: absolute;
+    left: -9px; top: 50%;
+    transform: translateY(-50%);
+    border: 8px solid transparent;
+    border-right-color: #2a4a2a;
+    border-left: none;
+  }
+  .jangchil-bubble::after {
+    content: '';
+    position: absolute;
+    left: -7px; top: 50%;
+    transform: translateY(-50%);
+    border: 7px solid transparent;
+    border-right-color: #0e1a0e;
+    border-left: none;
+  }
+  .jangchil-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: #f0b429;
+    margin-bottom: 5px;
+    letter-spacing: 1px;
+  }
+  .jangchil-title span { color: #ff4444; }
+  .jangchil-msg { color: #b8e8b8; font-size: 12px; }
+  .jangchil-sub { color: #6a8a6a; font-size: 11px; margin-top: 4px; }
+  .jangchil-sub span { color: #f0b429; }
+
+  /* Chart area */
+  .chart-area {
+    flex: 1;
+    position: relative;
+    background: #0e1018;
+    overflow: hidden;
+    min-height: 0;
+  }
+  .chart-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: stretch;
+  }
+  #tradingview-chart {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Analysis area */
+  .analysis-area {
+    height: 130px;
+    flex-shrink: 0;
+    background: #0e1018;
+    border-top: 1px solid var(--border);
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 12px;
+    gap: 8px;
+  }
+  .analysis-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    animation: blink 1.5s ease-in-out infinite;
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+  }
+
+  /* ── RIGHT ── */
+  .right-panel {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-right: none;
+  }
+
+  /* Analysis card */
+  .analysis-card {
+    background: #1a1020;
+    border: 1px solid #3d1a5a;
+    border-radius: 4px;
+    margin: 10px;
+    padding: 10px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .analysis-card-title {
+    font-size: 11px;
+    color: #9b6dbf;
+    margin-bottom: 4px;
+  }
+  .analysis-card-status {
+    font-size: 15px;
+    font-weight: 700;
+    color: #cc88ff;
+  }
+
+  .whale-list { overflow-y: auto; flex: 1; }
+  .whale-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 12px;
+    border-bottom: 1px solid #1c1f2a;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .whale-item:hover { background: var(--bg-card); }
+  .whale-name {
+    font-size: 12px;
+    color: var(--text-primary);
+  }
+  .whale-pct {
+    font-size: 12px;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--positive);
+  }
+
+  /* ── FOOTER ── */
+  .footer {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    height: 56px;
+    flex-shrink: 0;
+  }
+  .footer-btn {
+    border: none;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 17px;
+    font-weight: 900;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: filter 0.15s;
+  }
+  .footer-btn:hover { filter: brightness(1.1); }
+  .footer-btn:active { filter: brightness(0.9); }
+  .footer-wait {
+    background: var(--highlight);
+    color: #1a1000;
+  }
+  .footer-cancel {
+    background: var(--accent-orange);
+    color: white;
+  }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #2a2d3e; border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-left">
+    <span class="logo-icon">🐳</span>
+    <span class="logo-title">모비딕 프로그램 <span>2.0</span></span>
+  </div>
+  <div class="header-timer">
+    <span id="clock">00:00:00</span>
+    <span class="timer-count">(60)</span>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- LEFT: 전일대비 TOP 20 -->
+  <div class="panel left-panel">
+    <div class="panel-title">전일대비 TOP 20</div>
+    <div class="rank-list" id="rankList"></div>
+  </div>
+
+  <!-- CENTER -->
+  <div class="center-panel">
+    <!-- Trade Controls -->
+    <div class="trade-controls">
+      <div class="control-row">
+        <button class="btn btn-pct">10%</button>
+        <button class="btn btn-pct">25%</button>
+        <button class="btn btn-pct">50%</button>
+        <button class="btn btn-pct">100%</button>
+        <button class="btn btn-unit">단위:만</button>
+        <input class="btn-input" type="text" value="0" />
+        <button class="btn btn-buy-limit">매수예약</button>
+        <button class="btn btn-sell-market">즉시매수<br><span style="font-size:10px;font-weight:400">(시장가)</span></button>
+        <button class="btn btn-sell-market2">즉시매도<br><span style="font-size:10px;font-weight:400">(시장가)</span></button>
+      </div>
+      <div class="control-row">
+        <button class="btn btn-stoploss">손절</button>
+        <button class="btn btn-sl-opt">-0.5%</button>
+        <button class="btn btn-sl-opt">-1.0%</button>
+        <button class="btn btn-sl-opt">-1.5%</button>
+        <button class="btn btn-sl-pos">+2.0%</button>
+        <button class="btn btn-sl-zero">0%</button>
+        <button class="btn btn-execute" style="background:#3a3d50;color:#8b92a8">실행</button>
+      </div>
+    </div>
+
+    <!-- Icon Bar -->
+    <div class="icon-bar">
+      <div class="icon-btn" id="iconProxy" onclick="toggleIcon(this,'active')">
+        <span class="icon-svg">🖥️</span>
+        <span class="icon-label">프록시 서버</span>
+      </div>
+      <div class="icon-btn" id="iconNetwork" onclick="toggleIcon(this,'active-blue')">
+        <span class="icon-svg">🌐</span>
+        <span class="icon-label">네트워크 통신</span>
+      </div>
+      <div class="icon-btn" id="iconStrategy" onclick="toggleIcon(this,'active-yellow')">
+        <span class="icon-svg">🛡️</span>
+        <span class="icon-label">방어막&탈충</span>
+      </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="chart-area">
+      <div class="tradingview-widget-container" style="height:100%;width:100%">
+        <div id="tradingview_chart" style="height:100%;width:100%"></div>
+      </div>
+    </div>
+
+    <!-- 장칠병 상황 보고 -->
+    <div class="jangchil-area">
+      <div class="jangchil-char">🪖</div>
+      <div class="jangchil-bubble">
+        <div class="jangchil-title">- <span>장칠병</span> 상황 보고 -</div>
+        <div class="jangchil-msg">"호가창에 심각한 팬세를 포착 했습니다.<br>09:01 : 1분봉 매수 예약한 것을<br>미감전 자동 취소 하겠습니다.."</div>
+        <div class="jangchil-sub">※취소시유 - 호가창 급한 <span>○○○</span>을 발견.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="panel right-panel">
+    <!-- 비트코인 상황 -->
+    <div class="analysis-card">
+      <div class="analysis-card-title">비트코인 상황</div>
+      <div class="analysis-card-status">분석 대기 중...</div>
+    </div>
+
+    <!-- 고래 후보 TOP20 -->
+    <div class="panel-title">고래 후보 TOP20</div>
+    <div class="whale-list" id="whaleList"></div>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <button class="footer-btn footer-wait">관망 (Wait)</button>
+  <button class="footer-btn footer-cancel">예약 취소 (Cancel)</button>
+</div>
+
+<!-- TradingView Widget -->
+<script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+<script>
+// ── Icon Toggle ──
+function toggleIcon(el, activeClass) {
+  const classes = ['active','active-blue','active-yellow'];
+  const isOn = el.classList.contains(activeClass);
+  classes.forEach(c => el.classList.remove(c));
+  if (!isOn) el.classList.add(activeClass);
+}
+
+// ── TradingView Chart ──
+new TradingView.widget({
+  container_id: "tradingview_chart",
+  autosize: true,
+  symbol: "UPBIT:BIOKRW",
+  interval: "1",
+  timezone: "Asia/Seoul",
+  theme: "dark",
+  style: "1",
+  locale: "kr",
+  toolbar_bg: "#0e1018",
+  enable_publishing: false,
+  hide_top_toolbar: false,
+  hide_legend: false,
+  save_image: false,
+  backgroundColor: "rgba(14, 16, 24, 1)",
+  gridColor: "rgba(42, 45, 62, 0.5)",
+});
+
+// ── Timer ──
+let seconds = 0;
+function updateClock() {
+  seconds++;
+  const h = String(Math.floor(seconds / 3600)).padStart(2, '0');
+  const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
+  const s = String(seconds % 60).padStart(2, '0');
+  document.getElementById('clock').textContent = `${h}:${m}:${s}`;
+}
+setInterval(updateClock, 1000);
+
+// ── Dummy Data ──
+const rankData = [
+  { name: '바이오프로토콜', pct: 13.02 },
+  { name: '레드스톤', pct: 6.32 },
+  { name: '플록', pct: 5.34 },
+  { name: '카타나', pct: 5.00 },
+  { name: '쑨', pct: 4.96 },
+  { name: '펫지뱅권', pct: 4.92 },
+  { name: '제로베이스', pct: 4.05 },
+  { name: '엑셀라', pct: 3.71 },
+  { name: '문버드', pct: 3.41 },
+  { name: '마스크네트워크', pct: 2.94 },
+  { name: '무뎀', pct: 2.91 },
+  { name: '저스트', pct: 2.44 },
+  { name: '커널다오', pct: 2.18 },
+  { name: '블라스트', pct: 1.97 },
+  { name: '제로엑스', pct: 1.84 },
+  { name: '두플즈', pct: 1.51 },
+  { name: '카이트', pct: 1.35 },
+  { name: '센티언트', pct: 1.17 },
+  { name: '스카이프로토콜', pct: 0.81 },
+  { name: '스텔라루멘', pct: 0.77 },
+];
+
+const whaleData = [
+  { name: '바이오프로토콜', pct: 11.86 },
+  { name: '카타나', pct: 7.14 },
+  { name: '레드스톤', pct: 6.32 },
+  { name: '플록', pct: 6.21 },
+  { name: '펫지뱅권', pct: 5.74 },
+  { name: '쑨', pct: 4.96 },
+  { name: '제로베이스', pct: 4.73 },
+  { name: '엑셀라', pct: 4.19 },
+  { name: '마스크네트워크', pct: 3.64 },
+  { name: '문버드', pct: 3.41 },
+  { name: '무뎀', pct: 2.91 },
+  { name: '커널다오', pct: 2.38 },
+  { name: '블라스트', pct: 2.10 },
+  { name: '제로엑스', pct: 1.84 },
+  { name: '카이트', pct: 1.80 },
+  { name: '스파크', pct: 1.75 },
+  { name: '저스트', pct: 1.63 },
+  { name: '도지코인', pct: 1.42 },
+  { name: '에이더블유이', pct: 1.08 },
+  { name: '세이', pct: 0.88 },
+];
+
+// Render rank list
+const rankList = document.getElementById('rankList');
+rankData.forEach((item, i) => {
+  const div = document.createElement('div');
+  div.className = 'rank-item' + (i === 0 ? ' active' : '');
+  div.innerHTML = `
+    <span class="rank-name">${item.name}</span>
+    <span class="rank-pct up">${item.pct.toFixed(2)}%</span>
+  `;
+  div.addEventListener('click', () => {
+    document.querySelectorAll('.rank-item').forEach(el => el.classList.remove('active'));
+    div.classList.add('active');
+  });
+  rankList.appendChild(div);
+});
+
+// Render whale list
+const whaleList = document.getElementById('whaleList');
+whaleData.forEach(item => {
+  const div = document.createElement('div');
+  div.className = 'whale-item';
+  div.innerHTML = `
+    <span class="whale-name">${item.name}</span>
+    <span class="whale-pct">${item.pct.toFixed(2)}%</span>
+  `;
+  whaleList.appendChild(div);
+});
+</script>
+</body>
+</html>
